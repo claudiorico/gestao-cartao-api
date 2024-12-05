@@ -4,7 +4,7 @@ import cors from 'cors';
 import bodyParser from "body-parser";
 import { configDotenv } from 'dotenv';
 import swaggerUi from "swagger-ui-express";
-import swaggerDocument from "./swagger.json";
+import swaggerDocument from "./swagger.json" with { type: 'json' };
 import fs from "fs";
 
 const app = express();
