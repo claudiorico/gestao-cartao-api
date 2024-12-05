@@ -8,7 +8,7 @@ import swaggerDocument from "./swagger.json" assert { type: 'json' };
 import fs from "fs";
 
 const app = express();
-const port = 3080;
+const port = process.env.PORT || 3080;
 configDotenv();
 
 const customCss = fs.readFileSync(process.cwd() + "/swagger.css", "utf8");

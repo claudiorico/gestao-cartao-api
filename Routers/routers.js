@@ -1,7 +1,7 @@
 import express from 'express';
 import { createCartItem, updateCartItem, checkRefKey, getCartItems, deleteDetail, deleteRefKey, getCartItemsYear } from '../Models/CartModel.js'
 
-const port = 3080;
+const port = process.env.PORT || 3080;
 
 const router = express.Router();
 

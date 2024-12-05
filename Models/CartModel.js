@@ -1,7 +1,6 @@
 import { Sequelize, DataTypes, where } from "sequelize";
 import { format } from "date-fns";
 import { configDotenv } from "dotenv";
-import { tr } from "date-fns/locale";
 configDotenv();
 
 const sequelize = new Sequelize(
@@ -23,68 +22,12 @@ const sequelize = new Sequelize(
 try {
   await sequelize.authenticate();
   console.log("A conexão foi estabelecida com sucesso!");
-  // .then(() => {
-  //     console.log("A conexão foi estabelecida com sucesso!");
-  // })
-  // .catch((err) => {
-  //     console.error("Não foi possível conectar a base de dados:", err);
-  // });
 } catch (error) {
   console.error("Não foi possível conectar a base de dados:", error);
 }
 
-// class CartHeader extends Model {
-//     @Attribute(DataTypes.INTEGER)
-//     @PrimaryKey
-//     @AutoIncrement
-//     id
-
-//     @Attribute(DataTypes.STRING)
-//     @NotNull
-//     reference
-
-//     @Attribute(DataTypes.DECIMAL)
-//     @NotNull
-//     tatalvalue
-
-// };
-
-// class CartDetail extends Model {
-//     @Attribute(DataTypes.INTEGER)
-//     @PrimaryKey
-//     @AutoIncrement
-//     id
-
-//     @Attribute(DataTypes.DATE)
-//     @NotNull
-//     date
-
-//     @Attribute(DataTypes.STRING)
-//     description
-
-//     @Attribute(DataTypes.DECIMAL)
-//     value
-
-// };
-
-// class Classification extends Model {
-//     @Attribute(DataTypes.INTEGER)
-//     @PrimaryKey
-//     @AutoIncrement
-//     id
-
-//     @Attribute(DataTypes.STRING)
-//     @NotNull
-//     classification
-
-// }
 
 export const CartHeader = sequelize.define("CartHeader", {
-  // id : {
-  //     type: DataTypes.INTEGER,
-  //     autoIncrement: true,
-  //     primaryKey: true,
-  // },
   reference: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -96,11 +39,6 @@ export const CartHeader = sequelize.define("CartHeader", {
 });
 
 export const CartDetail = sequelize.define("CartDetail", {
-  // id : {
-  //     type: DataTypes.INTEGER,
-  //     autoIncrement: true,
-  //     primaryKey: true,
-  // },
   date: {
     type: DataTypes.DATE,
     allowNull: false,
@@ -167,7 +105,6 @@ export async function createCartItem(cartItem) {
       // Cria um objeto Date usando ano, mês e dia
       // Note que o mês em Date começa em 0 (janeiro = 0), então subtraímos 1
       let data = new Date(ano, mes - 1, dia);
-      console.log("passou aqui", element);
       return {
         date: format(data, "yyyy-MM-dd"),
         description: element.description,
@@ -176,7 +113,7 @@ export async function createCartItem(cartItem) {
         Classification: { classification: element.classification },
       };
     });
-    console.log(cartDetail);
+
     const cartHeader = await CartHeader.create(
       {
         reference: cartItem.header.reference,
@@ -194,24 +131,7 @@ export async function createCartItem(cartItem) {
       }
     );
 
-    // cartItem.Items.forEach(async element => {
-    //     // Divide a string em dia, mês e ano
-    //     let [dia, mes, ano] = element.date.split("/");
-    //     // Cria um objeto Date usando ano, mês e dia
-    //     // Note que o mês em Date começa em 0 (janeiro = 0), então subtraímos 1
-    //     let data = new Date(ano, mes - 1, dia);
-    //     const cartDetail = await CartDetail.create({
-    //         date: format(data, "yyyy-MM-dd"),
-    //         description: element.description,
-    //         value: element.value,
-    //         referenceId: cartHeader.id
-    //     });
-
-    //     const classification = await Classification.create({
-    //         classification: element.classification,
-    //         itemId: cartDetail.id
-    //     });
-    // });
+    console.log(`Registros criados referente ao ${cartItem.header.reference}`);
     return `Registros criados referente ao ${cartItem.header.reference}`;
   } catch (error) {
     throw error;
@@ -243,7 +163,6 @@ export async function updateCartItem(cartItem) {
       transaction: transaction,
     });
 
-    console.log(cartItem.Items);
     const cartDetailupd = cartItem.Items.map((element) => {
       // Divide a string em dia, mês e ano
       let [dia, mes, ano] = element.date.split("/");
@@ -258,7 +177,7 @@ export async function updateCartItem(cartItem) {
         classification: element.classification,
       };
     });
-    console.log(cartDetailupd);
+
     for (const element of cartDetailupd) {
       const cartDetailob = await CartDetail.findOne({
         where: {
@@ -270,7 +189,6 @@ export async function updateCartItem(cartItem) {
       if (!cartDetailob)
         throw new Error(`CartDetail ${element.description} não encontrado`);
 
-      console.log(cartDetailob);
       await cartDetailob.update(
         {
           date: element.date,
@@ -329,7 +247,7 @@ export async function deleteDetail(detailId) {
         id: detailId,
       },
     });
-    console.log(deletedCount);
+
     if (deletedCount > 0) {
       console.log(`Registro com ID ${detailId} foi excluído com sucesso.`);
       return {
@@ -394,10 +312,3 @@ export async function getCartItemsYear(refKeys) {
   return cartItemsYear;
 }
   
-async function fetchCartItemWithAssociations() {
-  const CartItemWithAssociations = await CartHeader.findOne({
-    where: { reference: "112024" },
-    include: [{ model: CartDetail, include: Classification }],
-  });
-  console.log(JSON.stringify(CartItemWithAssociations, null, 2));
-}
