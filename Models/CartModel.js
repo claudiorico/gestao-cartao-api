@@ -17,6 +17,25 @@ const sequelize = new Sequelize(
       acquire: 30000,
       idle: 10000,
     },
+    hooks: {
+      beforeConnect: async (config) => {
+        try {
+          const schemaName = "cart_db";
+          const tempSequelize = new Sequelize(
+            `mysql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}`
+          );
+
+          await tempSequelize.query(
+            `CREATE DATABASE IF NOT EXISTS \`${schemaName}\`;`
+          );
+          console.log("Schema criado ou já existente");
+
+          await tempSequelize.close();
+        } catch (error) {
+          console.error("Erro ao criar o schema:", error);
+        }
+      },
+    },
   }
 );
 
@@ -26,7 +45,6 @@ try {
 } catch (error) {
   console.error("Não foi possível conectar a base de dados:", error);
 }
-
 
 export const CartHeader = sequelize.define("CartHeader", {
   reference: {
@@ -80,7 +98,7 @@ CartDetail.hasOne(Classification, {
   onDelete: "CASCADE", // Garante exclusão em cascata
 });
 Classification.belongsTo(CartDetail, {
-  foreignKey: "itemId"
+  foreignKey: "itemId",
 });
 
 async function syncDatabase() {
@@ -278,7 +296,7 @@ export async function getCartItems(refkey) {
 export async function deleteRefKey(refKey) {
   try {
     const deletedCount = await CartHeader.destroy({
-      where: { reference: refKey }
+      where: { reference: refKey },
     });
     if (deletedCount > 0) {
       console.log(`Extrato ${refKey} foi excluído com sucesso.`);
@@ -296,20 +314,17 @@ export async function deleteRefKey(refKey) {
   } catch (error) {
     throw new Error(error);
   }
-
 }
 
 export async function getCartItemsYear(refKeys) {
-
   const refkeys = refKeys.map((el) => {
-    return { reference: el.refkey }
+    return { reference: el.refkey };
   });
   const cartItemsYear = await CartHeader.findAll({
     where: {
-      [Sequelize.Op.or]: refkeys
+      [Sequelize.Op.or]: refkeys,
     },
     include: [{ model: CartDetail, include: Classification }],
-  })
+  });
   return cartItemsYear;
 }
-  
