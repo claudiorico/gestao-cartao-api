@@ -1,0 +1,408 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Esta documentação é para API gestão de gastos de cartão",
+        "version": "1.0.0",
+        "title": "API Gestão de Gastos",
+        "contact": {
+            "email": "abc@gmail.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        }
+    },
+    "schemes": [
+        "http"
+    ],
+    "host": "localhost:3080",
+    "basePath": "/Cart",
+    "paths": {
+        "/CartItems/{refId}": {
+            "get": {
+                "summary": "Consulta o lançamento de gastos do mês ano de referência",
+                "description": "Consulta o lançamento de gastos do mês ano de referência",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "refId",
+                        "in": "path",
+                        "description": "Mês de referência que será consultado",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operação com successo",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/cartItem"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Valor do status invalido",
+                        "schema": {
+                            "$ref": "#/definitions/InvalidResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/CheckRefKey/{refKey}": {
+            "get": {
+                "summary": "Validar se já existe mês e ano gravados no banco de dados",
+                "description": "Validar se já existe mês e ano gravados no banco de dados",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "refKey",
+                        "in": "path",
+                        "description": "Mês de referência que será consultado",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operação com successo",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/cartHeader"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Valor do status invalido",
+                        "schema": {
+                            "$ref": "#/definitions/InvalidResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/CartItemIns": {
+            "post": {
+                "summary": "Gravar os detalhes de lançamentos da fatura",
+                "description": "Gravar os lançamentos da fatura",
+                "produces": [
+                    "application/json"
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "Lançamento da fatura",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "cart": {
+                                    "type": "object",
+                                    "$ref": "#/definitions/cartItem"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operação com successo",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/CartItem"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Valor do status invalido",
+                        "schema": {
+                            "$ref": "#/definitions/InvalidResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/CartItemsUpd": {
+            "put": {
+                "summary": "Atualiza os lançamentos de fatura",
+                "description": "Atualiza os lançamentos de fatura",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "Objeto Tarefa",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "cart": {
+                                    "type": "object",
+                                    "$ref": "#/definitions/cartItem"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Oparacao com successo",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/cartItem"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Valor do status invalido",
+                        "schema": {
+                            "$ref": "#/definitions/InvalidResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/YearDetail": {
+            "post": {
+                "summary": "Selecionar os lançamentos do ano",
+                "description": "Selecionar os lançamentos do ano",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "Meses de referência do ano",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "$ref": "#/definitions/refKeys"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operação com sucesso.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/cartItem"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Valor do status invalido",
+                        "schema": {
+                            "$ref": "#/definitions/InvalidResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/ItemsDetail/{refKey}": {
+            "delete": {
+                "summary": "Deleta lançamentos do mês de referência",
+                "description": "Deleta lançamentos do mês de referência",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "refKey",
+                        "in": "path",
+                        "description": "Mês e ano de referência que será deletado",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operação com sucesso.",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/CartHeaderDeleted"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Valor do status invalido",
+                        "schema": {
+                            "$ref": "#/definitions/InvalidResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/CartDetailItem/{itemId}": {
+            "delete": {
+                "summary": "Deleta uma linha do extrato",
+                "description": "Deleta lançamentos de uma linha do mês de referência",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "itemId",
+                        "in": "path",
+                        "description": "Id do item de referência",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operação com sucesso.",
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/CartItemDeleted"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Valor do status invalido",
+                        "schema": {
+                            "$ref": "#/definitions/InvalidResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "cartItem": {
+            "type": "object",
+            "properties": {
+                "header": {
+                    "type": "object",
+                    "properties": {
+                        "reference": {
+                            "type": "string"
+                        },
+                        "totalvalue": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "Items": {
+                    "type": "array",
+                    "items": {
+                        "properties": {
+                            "date": {
+                                "type": "string"
+                            },
+                            "description": {
+                                "type": "string"
+                            },
+                            "value": {
+                                "type": "integer"
+                            },
+                            "classification": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "cartItemYear": {
+            "type": "object",
+            "properties": {
+                "mes": {
+                    "type": "string",
+                    "date": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "value": {
+                        "type": "integer"
+                    },
+                    "classification": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "cartHeader": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "reference": {
+                    "type": "string"
+                },
+                "totalValue": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "CartItemDeleted": {
+            "type": "string",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "resposta": {
+                    "type": "string"
+                }
+            }
+        },
+        "CartHeaderDeleted": {
+            "type": "string",
+            "properties": {
+                "reference": {
+                    "type": "string"
+                },
+                "resposta": {
+                    "type": "string"
+                }
+            }
+        },
+        "refKeys": {
+            "items": {
+                "type": "object",
+                "properties": {
+                    "refkey": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "InvalidResponse": {
+            "type": "object",
+            "properties": {
+                "statusCode": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}
