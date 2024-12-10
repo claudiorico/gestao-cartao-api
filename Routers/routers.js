@@ -9,14 +9,16 @@ router.get("/", (req, res) => {
     res.send(`<h1>API executando na porta ${port}</h1>`);
 });
 
-router.get("/CartItems/:refKey", async (req, res) => {
+router.get("/CartItems/:refkey/:email", async (req, res) => {
     try {
-        const resposta = await getCartItems(req.params.refKey);
+        console.log(req.params);
+        // if()
+        const resposta = await getCartItems({ refkey: req.params.refkey, email: req.params.email });
         if(resposta){
             res.status(200).json(resposta);
 
         } else {
-            res.status(400).send('Registro não encontrado!');
+            res.status(200).send('Registro não encontrado!');
         }
         
     } catch (error) {
@@ -24,9 +26,9 @@ router.get("/CartItems/:refKey", async (req, res) => {
     }    
 });
 
-router.get("/CheckRefKey/:refKey", async (req, res) => {
+router.get("/CheckRefKey/:refkey/:email", async (req, res) => {
     try {
-        const resposta = await checkRefKey(req.params.refKey);
+        const resposta = await checkRefKey({refkey: req.params.refkey, email: req.params.email });
         res.status(200).json(resposta);
         
     } catch (error) {
@@ -37,6 +39,7 @@ router.get("/CheckRefKey/:refKey", async (req, res) => {
 router.post("/CartItemIns", async (req, res) => {
     try {
         const newCartItem = req.body.cart;
+        console.log(newCartItem);
         const resposta = await createCartItem(newCartItem);
         res.status(200).json(resposta);
     } catch (error) {
@@ -45,11 +48,12 @@ router.post("/CartItemIns", async (req, res) => {
 
 });
 
-router.post("/YearDetail", async (req, res) => {
+router.post("/YearDetail/:email", async (req, res) => {
     try {
+        console.log(req.params.email);
         console.log(req.body);
         const refKeys = req.body;
-        const resposta = await getCartItemsYear(refKeys);
+        const resposta = await getCartItemsYear({ refKeys: refKeys, email: req.params.email });
         
         if(resposta){
             res.status(200).json(resposta);
@@ -76,7 +80,7 @@ router.put("/CartItemsUpd", async (req, res) => {
 
 router.delete("/CartDetailItem/:itemId", async (req, res) => {
     try {
-        const itemId = req.params.itemId;
+        const { itemId } = req.params;
         const resposta = await deleteDetail(itemId);
         console.log(resposta);
         res.status(200).json(resposta);
@@ -85,10 +89,10 @@ router.delete("/CartDetailItem/:itemId", async (req, res) => {
     }
 });
 
-router.delete("/ItemsDetail/:refKey", async (req, res) => {
+router.delete("/ItemsDetail/:refKey/:email", async (req, res) => {
     try {
-        const refKey = req.params.refKey;
-        const resposta = await deleteRefKey(refKey);
+        // const refKey = req.params;
+        const resposta = await deleteRefKey(req.params);
         console.log(resposta);
         res.status(200).json(resposta);
     } catch (error) {

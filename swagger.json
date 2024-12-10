@@ -18,7 +18,7 @@
     "host": "localhost:3080",
     "basePath": "/Cart",
     "paths": {
-        "/CartItems/{refId}": {
+        "/CartItems/{refId}/{email}": {
             "get": {
                 "summary": "Consulta o lançamento de gastos do mês ano de referência",
                 "description": "Consulta o lançamento de gastos do mês ano de referência",
@@ -32,6 +32,13 @@
                         "description": "Mês de referência que será consultado",
                         "required": true,
                         "type": "string"
+                    },
+                    {
+                        "name": "email",
+                        "in": "path",
+                        "description": "Email do usuário logado",
+                        "required": true,
+                        "type":"string"
                     }
                 ],
                 "responses": {
@@ -53,7 +60,7 @@
                 }
             }
         },
-        "/CheckRefKey/{refKey}": {
+        "/CheckRefKey/{refKey}/{email}": {
             "get": {
                 "summary": "Validar se já existe mês e ano gravados no banco de dados",
                 "description": "Validar se já existe mês e ano gravados no banco de dados",
@@ -67,7 +74,14 @@
                         "description": "Mês de referência que será consultado",
                         "required": true,
                         "type": "string"
-                    }
+                    },
+                    {
+                        "name": "email",
+                        "in": "path",
+                        "description": "Email do usuário logado",
+                        "required": true,
+                        "type":"string"
+                    }                    
                 ],
                 "responses": {
                     "200": {
@@ -215,7 +229,7 @@
                 }
             }
         },
-        "/ItemsDetail/{refKey}": {
+        "/ItemsDetail/{refKey}/{email}": {
             "delete": {
                 "summary": "Deleta lançamentos do mês de referência",
                 "description": "Deleta lançamentos do mês de referência",
@@ -229,7 +243,14 @@
                         "description": "Mês e ano de referência que será deletado",
                         "required": true,
                         "type": "string"
-                    }
+                    },
+                    {
+                        "name": "email",
+                        "in": "path",
+                        "description": "Email do usuário logado",
+                        "required": true,
+                        "type":"string"
+                    }                     
                 ],
                 "responses": {
                     "200": {
@@ -289,6 +310,17 @@
         "cartItem": {
             "type": "object",
             "properties": {
+                "user": {
+                    "type":"object",
+                    "properties": {
+                        "name": {
+                            "type":"string"
+                        },
+                        "email": {
+                            "type": "string"
+                        }
+                    }
+                },
                 "header": {
                     "type": "object",
                     "properties": {

@@ -46,6 +46,17 @@ try {
   console.error("Não foi possível conectar a base de dados:", error);
 }
 
+export const User = sequelize.define("User", {
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  email: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+});
+
 export const CartHeader = sequelize.define("CartHeader", {
   reference: {
     type: DataTypes.STRING,
@@ -84,6 +95,14 @@ export const Classification = sequelize.define("Classification", {
   },
 });
 
+User.hasOne(CartHeader, {
+  foreignKey: "userId",
+  onDelete: "CASCADE", // Garante exclusão em cascata
+});
+CartHeader.belongsTo(User, {
+  foreignKey: "userId",
+});
+
 // Definindo a associação um-para-muitos
 CartHeader.hasMany(CartDetail, {
   foreignKey: "referenceId",
@@ -108,11 +127,17 @@ async function syncDatabase() {
 
 syncDatabase();
 
-export async function checkRefKey(refKey) {
+export async function checkRefKey(objkey) {
   const regCount = await CartHeader.count({
-    where: { reference: refKey },
+    where: { reference: objkey.refKey },
+    include: [
+      {
+        model: User,
+        attributes: ["name", "email"],
+        where: { email: objkey.email },
+      },
+    ],
   });
-  console.log(regCount);
   return regCount;
 }
 
@@ -133,26 +158,52 @@ export async function createCartItem(cartItem) {
       };
     });
 
-    const cartHeader = await CartHeader.create(
+    const cartUser = await User.create(
       {
-        reference: cartItem.header.reference,
-        totalvalue: cartItem.header.totalvalue,
+        name: cartItem.user.name,
+        email: cartItem.user.email,
 
-        CartDetails: cartDetail,
+        CartHeader: {
+          reference: cartItem.header.reference,
+          totalvalue: cartItem.header.totalvalue,
+
+          CartDetails: cartDetail,
+        },
       },
       {
         include: [
           {
-            model: CartDetail,
-            include: [Classification],
+            model: CartHeader,
+            include: [{ model: CartDetail, include: [Classification] }],
+            //   model: CartDetail,
+            //   include: [Classification],
+            // }],
           },
         ],
       }
     );
 
+    // const cartHeader = await CartHeader.create(
+    //   {
+    //     reference: cartItem.header.reference,
+    //     totalvalue: cartItem.header.totalvalue,
+
+    //     CartDetails: cartDetail,
+    //   },
+    //   {
+    //     include: [
+    //       {
+    //         model: CartDetail,
+    //         include: [Classification],
+    //       },
+    //     ],
+    //   }
+    // );
+
     console.log(`Registros criados referente ao ${cartItem.header.reference}`);
     return `Registros criados referente ao ${cartItem.header.reference}`;
   } catch (error) {
+    console.log(error);
     throw error;
   }
 }
@@ -163,6 +214,13 @@ export async function updateCartItem(cartItem) {
   try {
     const cartHeader = await CartHeader.findOne({
       where: { reference: cartItem.header.reference },
+      include: [
+        {
+          model: User,
+          attributes: ["name", "email"],
+          where: { email: cartItem.user.email },
+        }        
+      ]
     });
 
     if (!cartHeader) {
@@ -180,6 +238,14 @@ export async function updateCartItem(cartItem) {
       where: { reference: headerRef },
       fields: ["totalvalue"],
       transaction: transaction,
+
+      include: [
+        {
+          model: User,
+          attributes: ["name", "email"],
+          where: { email: cartItem.user.email },
+        }          
+      ]
     });
 
     const cartDetailupd = cartItem.Items.map((element) => {
@@ -285,18 +351,32 @@ export async function deleteDetail(detailId) {
   }
 }
 
-export async function getCartItems(refkey) {
+export async function getCartItems(objkey) {
+  const {refkey, email} = objkey;
   const CartItemWithAssociations = await CartHeader.findOne({
     where: { reference: refkey },
-    include: [{ model: CartDetail, include: Classification }],
+    include: [
+      {
+        model: User,
+        // attributes: ["name", "email"],
+        where: { email: email },
+      },
+      { model: CartDetail, include: Classification },
+    ],
   });
   return CartItemWithAssociations;
 }
 
-export async function deleteRefKey(refKey) {
+export async function deleteRefKey(objkey) {
+  const {refKey, email} = objkey;
   try {
     const deletedCount = await CartHeader.destroy({
       where: { reference: refKey },
+      include: [{
+        model: User,
+        // attributes: ["name", "email"],
+        where: { email: email },
+      }]      
     });
     if (deletedCount > 0) {
       console.log(`Extrato ${refKey} foi excluído com sucesso.`);
@@ -316,15 +396,22 @@ export async function deleteRefKey(refKey) {
   }
 }
 
-export async function getCartItemsYear(refKeys) {
-  const refkeys = refKeys.map((el) => {
+export async function getCartItemsYear(objkey) {
+  const refkeys = objkey.refKeys.map((el) => {
     return { reference: el.refkey };
   });
   const cartItemsYear = await CartHeader.findAll({
     where: {
       [Sequelize.Op.or]: refkeys,
     },
-    include: [{ model: CartDetail, include: Classification }],
+    include: [
+      {
+        model: User,
+        // attributes: ["name", "email"],
+        where: { email: objkey.email },
+      },
+      { model: CartDetail, include: Classification },
+    ],
   });
   return cartItemsYear;
 }
