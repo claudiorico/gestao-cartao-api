@@ -1,5 +1,8 @@
 import { Sequelize, DataTypes, where } from "sequelize";
 import { format } from "date-fns";
+import pkg from 'pg';
+const { Client } = pkg;
+
 import { configDotenv } from "dotenv";
 configDotenv();
 
@@ -10,7 +13,7 @@ const sequelize = new Sequelize(
   {
     host: process.env.DB_HOST,
     port: process.env.SERVER_PORT,
-    dialect: "mysql",
+    dialect: process.env.DB_DIALECT,
     pool: {
       max: 5,
       min: 0,
@@ -19,21 +22,46 @@ const sequelize = new Sequelize(
     },
     hooks: {
       beforeConnect: async (config) => {
+
+        
         try {
           const schemaName = "cart_db";
+        
+          // Conexão temporária com o banco padrão do PostgreSQL (geralmente "postgres")
           const tempSequelize = new Sequelize(
-            `mysql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}`
+            `postgres://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.SERVER_PORT}/postgres`
           );
-
-          await tempSequelize.query(
-            `CREATE DATABASE IF NOT EXISTS \`${schemaName}\`;`
-          );
-          console.log("Schema criado ou já existente");
-
+        
+          // Conexão usando o Client do 'pg' para verificar se o banco já existe
+          const client = new Client({
+            user: process.env.DB_USER,
+            password: process.env.DB_PASSWORD,
+            host: process.env.DB_HOST,
+            port: process.env.DB_PORT,
+            database: "postgres",
+          });
+        
+          await client.connect();
+        
+          // Consulta para verificar se o banco já existe
+          const checkDbQuery = `SELECT 1 FROM pg_database WHERE datname = '${schemaName}';`;
+          const res = await client.query(checkDbQuery);
+        
+          if (res.rowCount === 0) {
+            // O banco de dados não existe, então criamos
+            await tempSequelize.query(`CREATE DATABASE "${schemaName}";`);
+            console.log(`Banco de dados '${schemaName}' criado com sucesso.`);
+          } else {
+            console.log(`Banco de dados '${schemaName}' já existe.`);
+          }
+        
+          // Fecha as conexões
+          await client.end();
           await tempSequelize.close();
         } catch (error) {
-          console.error("Erro ao criar o schema:", error);
+          console.error("Erro ao criar/verificar o banco de dados:", error);
         }
+        
       },
     },
   }

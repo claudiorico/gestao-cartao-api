@@ -1,5 +1,5 @@
 import express from 'express';
-import { createCartItem, updateCartItem, checkRefKey, getCartItems, deleteDetail, deleteRefKey, getCartItemsYear } from '../Models/CartModel.js'
+import { createCartItem, updateCartItem, checkRefKey, getCartItems, deleteDetail, deleteRefKey, getCartItemsYear } from '../Models/CartModelPs.js'
 
 const port = process.env.PORT || 3080;
 
