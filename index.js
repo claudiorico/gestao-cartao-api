@@ -15,7 +15,7 @@ const customCss = fs.readFileSync(process.cwd() + "/swagger.css", "utf8");
 console.log(customCss);
 
 // Lista de origens permitidas
-const allowedOrigins = ["http://localhost:3080","http://localhost:5173", "https://gestao-cartao.netlify.app/"];
+const allowedOrigins = ["http://localhost:3080","http://localhost:5173", "https://gestao-cartao.netlify.app"];
 
 // Configuração do CORS
 const corsOptions = {
