@@ -1,6 +1,6 @@
 import { Sequelize, DataTypes, where } from "sequelize";
 import { format } from "date-fns";
-import pkg from 'pg';
+import pkg from "pg";
 const { Client } = pkg;
 
 import { configDotenv } from "dotenv";
@@ -22,16 +22,14 @@ const sequelize = new Sequelize(
     },
     hooks: {
       beforeConnect: async (config) => {
-
-        
         try {
           const schemaName = "cart_db";
-        
+
           // Conexão temporária com o banco padrão do PostgreSQL (geralmente "postgres")
           const tempSequelize = new Sequelize(
             `postgres://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.SERVER_PORT}/postgres`
           );
-        
+
           // Conexão usando o Client do 'pg' para verificar se o banco já existe
           const client = new Client({
             user: process.env.DB_USER,
@@ -40,13 +38,13 @@ const sequelize = new Sequelize(
             port: process.env.DB_PORT,
             database: "postgres",
           });
-        
+
           await client.connect();
-        
+
           // Consulta para verificar se o banco já existe
           const checkDbQuery = `SELECT 1 FROM pg_database WHERE datname = '${schemaName}';`;
           const res = await client.query(checkDbQuery);
-        
+
           if (res.rowCount === 0) {
             // O banco de dados não existe, então criamos
             await tempSequelize.query(`CREATE DATABASE "${schemaName}";`);
@@ -54,14 +52,13 @@ const sequelize = new Sequelize(
           } else {
             console.log(`Banco de dados '${schemaName}' já existe.`);
           }
-        
+
           // Fecha as conexões
           await client.end();
           await tempSequelize.close();
         } catch (error) {
           console.error("Erro ao criar/verificar o banco de dados:", error);
         }
-        
       },
     },
   }
@@ -149,7 +146,7 @@ Classification.belongsTo(CartDetail, {
 });
 
 async function syncDatabase() {
-  await sequelize.sync({ force: true });
+  await sequelize.sync({ alter: true });
   console.log("Tabelas sincronizadas com sucesso!");
 }
 
