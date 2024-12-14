@@ -95,7 +95,7 @@ export const CartHeader = sequelize.define("CartHeader", {
 
 export const CartDetail = sequelize.define("CartDetail", {
   date: {
-    type: DataTypes.DATE,
+    type: DataTypes.DATEONLY,
     allowNull: false,
   },
   description: {
@@ -188,43 +188,160 @@ export async function createCartItem(cartItem) {
       };
     });
 
-    const cartUser = await User.create(
-      {
-        name: cartItem.user.name,
-        email: cartItem.user.email,
-
-        CartHeader: {
-          reference: cartItem.header.reference,
-          totalvalue: cartItem.header.totalvalue,
-
-          CartDetails: cartDetail,
+    try {
+      // Verifica se o usuário já existe
+      const [user, created] = await User.findOrCreate({
+        where: { email: cartItem.user.email }, // Verifica pelo e-mail (ou outra chave única)
+        defaults: {
+          name: cartItem.user.name, // Define o nome apenas se o usuário não existir
         },
-      },
-      {
-        include: [
-          {
-            model: CartHeader,
-            include: [{ model: CartDetail, include: [Classification] }],
-            //   model: CartDetail,
-            //   include: [Classification],
-            // }],
-          },
-        ],
+      });
+
+      console.log(
+        created ? "Novo usuário criado" : "Usuário existente reutilizado"
+      );
+
+      // Verifica se o CartHeader já existe
+      const [cartHeader, createdHeader] = await CartHeader.findOrCreate({
+        where: {
+          reference: cartItem.header.reference,
+          userId: user.id, // Garante que o CartHeader pertence ao usuário correto
+        },
+        defaults: {
+          totalvalue: cartItem.header.totalvalue, // Define o valor total apenas se o CartHeader não existir
+        },
+      });
+
+      console.log(
+        createdHeader
+          ? "Novo CartHeader criado"
+          : "CartHeader existente reutilizado"
+      );
+
+      // Se necessário, atualize o CartHeader
+      if (!createdHeader) {
+        await cartHeader.update({
+          totalvalue: cartItem.header.totalvalue, // Atualiza o valor total, se necessário
+        });
       }
-    );
 
-    // const cartHeader = await CartHeader.create(
+      // Adiciona ou atualiza os CartDetails relacionados
+      for (const detail of cartDetail) {
+        const [cartDetailRecord, createdDetail] = await CartDetail.findOrCreate(
+          {
+            where: {
+              date: detail.date,
+              description: detail.description,
+              referenceId: cartHeader.id, // Relaciona com o CartHeader
+              //[Sequelize.Op.and]: [ Sequelize.where( fn("DATE", col("date")), detail.date ) ],
+            },
+            defaults: {
+              date: detail.date,
+              value: detail.value,
+            },
+          }
+        );
+
+        if (!createdDetail) {
+          await cartDetailRecord.update({
+            date: detail.date,
+            value: detail.value,
+          });
+        }
+
+        // Adiciona ou atualiza Classification
+        if (detail.Classification) {
+          const [classification, createdClassification] =
+            await Classification.findOrCreate({
+              where: {
+                itemId: cartDetailRecord.id, // Relaciona com o CartDetail
+              },
+              defaults: {
+                classification: detail.Classification.classification,
+              },
+            });
+
+          if (!createdClassification) {
+            await classification.update({
+              classification: detail.Classification.classification,
+            });
+          }
+
+          console.log( createdClassification ? "Classificação criada" : "Classificação atualizada")
+        }
+      }
+
+      // // Adiciona os CartHeaders e outros relacionamentos
+      // const [cartHeader, createdH] = await CartHeader.findOrCreate(
+      //   {
+      //     where: { reference: cartItem.header.reference },
+      //     defaults: {
+      //       //reference: cartItem.header.reference,
+      //       totalvalue: cartItem.header.totalvalue,
+      //       userId: user.id, // Associa o usuário existente ao CartHeader
+
+      //       CartDetails: cartDetail, // Os detalhes associados ao header
+      //     },
+      //   },
+      //   {
+      //     include: [
+      //       {
+      //         model: CartDetail,
+      //         as: "CartDetails", // Certifique-se de usar o alias correto
+      //         include: [{ model: Classification, as: "Classification" }],
+      //       },
+      //     ],
+      //   }
+      // );
+
+      // console.log(
+      //   createdH ? "Novo Cabeçalho" : "Cabeçalho existente utilizado"
+      // );
+ 
+      // if (!createdH) {
+      //   await cartHeader.update({
+      //     totalvalue: cartItem.header.totalvalue,
+      //   });
+
+      //   const cartDetailNew = cartDetail.map((it) => {
+      //     return { ...it, referenceId: cartHeader.id };
+      //   });
+
+      //   const resposta = CartDetail.create(
+      //     {
+      //       CartDetails: cartDetailNew, // Os detalhes associados ao header
+      //     },
+      //     {
+      //       include: [{ model: Classification, as: "Classification" }],
+      //     }
+      //   );
+      // }
+
+      console.log(
+        "CartHeader e relacionamentos criados com sucesso:",
+        cartHeader
+      );
+    } catch (error) {
+      console.error("Erro ao criar os dados:", error);
+    }
+
+    // const cartUser = await User.create(
     //   {
-    //     reference: cartItem.header.reference,
-    //     totalvalue: cartItem.header.totalvalue,
+    //     name: cartItem.user.name,
+    //     email: cartItem.user.email,
 
-    //     CartDetails: cartDetail,
+    //     CartHeader: {
+    //       reference: cartItem.header.reference,
+    //       totalvalue: cartItem.header.totalvalue,
+
+    //       CartDetails: cartDetail,
+    //     },
     //   },
     //   {
     //     include: [
     //       {
-    //         model: CartDetail,
-    //         include: [Classification],
+    //         model: CartHeader,
+    //         include: [{ model: CartDetail, include: [Classification] }],
     //       },
     //     ],
     //   }
@@ -298,6 +415,7 @@ export async function updateCartItem(cartItem) {
         where: {
           referenceId: element.referenceId,
           description: element.description,
+          date: element.date,
         },
         transaction: transaction,
       });
@@ -394,6 +512,7 @@ export async function getCartItems(objkey) {
       { model: CartDetail, include: Classification },
     ],
   });
+  console.log(CartItemWithAssociations.CartDetails);
   return CartItemWithAssociations;
 }
 
