@@ -512,8 +512,8 @@ export async function getCartItems(objkey) {
       { model: CartDetail, include: Classification },
     ],
   });
-  console.log(CartItemWithAssociations.CartDetails);
-  return CartItemWithAssociations;
+  console.log(CartItemWithAssociations);
+  return CartItemWithAssociations ? CartItemWithAssociations : 0;
 }
 
 export async function deleteRefKey(objkey) {
