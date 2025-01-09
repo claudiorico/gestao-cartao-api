@@ -14,6 +14,11 @@ const sequelize = new Sequelize(
     host: process.env.DB_HOST,
     port: process.env.SERVER_PORT,
     dialect: process.env.DB_DIALECT,
+    dialectOptions: {
+      ssl: {
+        require: true,
+      },
+    },
     pool: {
       max: 5,
       min: 0,
@@ -27,7 +32,14 @@ const sequelize = new Sequelize(
 
           // Conexão temporária com o banco padrão do PostgreSQL (geralmente "postgres")
           const tempSequelize = new Sequelize(
-            `postgres://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.SERVER_PORT}/postgres`
+            `postgres://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.SERVER_PORT}/neondb`,
+            {
+              dialectOptions: {
+                ssl: {
+                  require: true,
+                },
+              },
+            }
           );
 
           // Conexão usando o Client do 'pg' para verificar se o banco já existe
@@ -37,6 +49,11 @@ const sequelize = new Sequelize(
             host: process.env.DB_HOST,
             port: process.env.DB_PORT,
             database: "postgres",
+            dialectOptions: {
+              ssl: {
+                require: true,
+              },
+            },
           });
 
           await client.connect();
@@ -267,7 +284,11 @@ export async function createCartItem(cartItem) {
             });
           }
 
-          console.log( createdClassification ? "Classificação criada" : "Classificação atualizada")
+          console.log(
+            createdClassification
+              ? "Classificação criada"
+              : "Classificação atualizada"
+          );
         }
       }
 
@@ -297,7 +318,7 @@ export async function createCartItem(cartItem) {
       // console.log(
       //   createdH ? "Novo Cabeçalho" : "Cabeçalho existente utilizado"
       // );
- 
+
       // if (!createdH) {
       //   await cartHeader.update({
       //     totalvalue: cartItem.header.totalvalue,
